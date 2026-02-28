@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>360° HLS Video Player</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  </head>
+  <body>
+
+    <a-scene>
+      <a-assets>
+        <video id="video-stream" crossorigin="anonymous" playsinline webkit-playsinline></video>
+      </a-assets>
+
+      <a-videosphere src="#video-stream" rotation="0 -90 0"></a-videosphere>
+
+      <a-camera user-height="0"></a-camera>
+    </a-scene>
+
+    <script>
+      const video = document.getElementById('video-stream');
+      // Replace this URL with your actual .m3u8 HLS link
+      const hlsSrc = 'https://public-video-cdn.boops.org/360/360+stream.m3u8';
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(hlsSrc);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+          // Note: Browsers usually require a user click to start audio/video
+          console.log("HLS Loaded. Click the screen to play.");
+        });
+      } 
+      // For Safari (which has native HLS support)
+      else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = hlsSrc;
+      }
+
+      // Simple click-to-play toggle
+      window.addEventListener('click', () => {
+        if (video.paused) {
+          video.play();
+        } else {
+          video.pause();
+        }
+      });
+    </script>
+  </body>
+</html>
