@@ -30,7 +30,7 @@
                 
                 data.levels.forEach((level, index) => {
                     const link = document.createElement('a');
-                    link.href = 'https://boops.org/360.html?level=' index;
+                    link.href = `https://boops.org/360.html?level=${index}`;
                     link.textContent = `${level.width}x${level.height} | Bitrate: ${level.bitrate} bps`;
                     link.target = '_blank';
                 });
