@@ -33,7 +33,15 @@
         video.src = hlsSrc;
       }
 
-      // Simple click-to-play toggle
+      window.addEventListener('touchstart', (event) => {
+        if (video.paused) {
+          video.play();
+        } else {
+          video.pause();
+        }
+      });
+
+      // Simple Space to play and pause
       window.addEventListener('keydown', (event) => {
         if (event.code === 'Space') {
           if (video.paused) {
