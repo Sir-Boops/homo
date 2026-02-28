@@ -20,7 +20,8 @@
 
     <script>
       const video = document.getElementById('video-stream');
-      // Replace this URL with your actual .m3u8 HLS link
+      const queryString = window.location.search;
+      const params = new URLSearchParams(queryString);
       const hlsSrc = 'https://public-video-cdn.boops.org/360v5/Untitled.m3u8';
 
       if (Hls.isSupported()) {
