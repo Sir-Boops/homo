@@ -10,7 +10,7 @@
 
     <a-scene>
       <a-assets>
-        <video id="video-stream" crossorigin="anonymous" preload="auto" controls playsinline webkit-playsinline></video>
+        <video id="video-stream" crossorigin="anonymous" controls playsinline webkit-playsinline></video>
       </a-assets>
 
       <a-videosphere src="#video-stream" rotation="0 -90 0"></a-videosphere>
@@ -21,7 +21,7 @@
     <script>
       const video = document.getElementById('video-stream');
       // Replace this URL with your actual .m3u8 HLS link
-      const hlsSrc = 'https://public-video-cdn.boops.org/360v4/360+stream.m3u8';
+      const hlsSrc = 'https://public-video-cdn.boops.org/360v5/Untitled.m3u8';
 
       if (Hls.isSupported()) {
         const hls = new Hls();
