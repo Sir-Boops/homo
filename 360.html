@@ -26,6 +26,7 @@
       if (Hls.isSupported()) {
         const hls = new Hls();
         hls.loadSource(hlsSrc);
+        hls.currentLevel = params.get('level');
         hls.attachMedia(video);
       } 
       // For Safari (which has native HLS support)
