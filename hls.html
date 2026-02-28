@@ -9,9 +9,7 @@
 <body>
 
     <h2>HLS Level Inspector</h2>
-    <div id="HLSDiv">
-        
-    </div>
+    <div id="HLSDiv"></div>
 
     <script>
         const video = document.getElementById('video');
@@ -34,6 +32,7 @@
                     link.textContent = `${level.width}x${level.height} | Bitrate: ${level.bitrate} bps`;
                     link.target = '_blank';
                     div.appendChild(link);
+                    console.log('I ran!');
                 });
             });
 
