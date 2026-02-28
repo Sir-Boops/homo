@@ -27,10 +27,6 @@
         const hls = new Hls();
         hls.loadSource(hlsSrc);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
-          // Note: Browsers usually require a user click to start audio/video
-          console.log("HLS Loaded. Click the screen to play.");
-        });
       } 
       // For Safari (which has native HLS support)
       else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -38,11 +34,13 @@
       }
 
       // Simple click-to-play toggle
-      window.addEventListener('click', () => {
-        if (video.paused) {
-          video.play();
-        } else {
-          video.pause();
+      window.addEventListener('keydown', (event) => {
+        if (event.code === 'Space') {
+          if (video.paused) {
+            video.play();
+          } else {
+            video.pause();
+          }
         }
       });
     </script>
