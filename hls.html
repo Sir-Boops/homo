@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLS Stream Inspector</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; }
+        video { width: 80%; max-width: 800px; border: 2px solid #444; margin-top: 20px; }
+        .info { margin-top: 10px; color: #aaa; }
+    </style>
+</head>
+<body>
+
+    <h2>HLS Level Inspector</h2>
+    <video id="video" controls></video>
+    <p class="info">Open your <strong>Console (F12)</strong> to see the stream levels.</p>
+
+    <script>
+        const video = document.getElementById('video');
+        // A sample HLS stream (Big Buck Bunny)
+        const streamSrc = 'https://public-video-cdn.boops.org/360v5/Untitled.m3u8';
+
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(streamSrc);
+            hls.attachMedia(video);
+
+            // 1. Triggered when the manifest is parsed
+            hls.on(Hls.Events.MANIFEST_PARSED, function(event, data) {
+                console.log("--- Manifest Parsed! ---");
+                console.log("Found " + data.levels.length + " quality levels:");
+                
+                data.levels.forEach((level, index) => {
+                    console.log(`Level ${index}: ${level.width}x${level.height} | Bitrate: ${level.bitrate} bps`);
+                });
+                
+                video.play();
+            });
+
+            // 2. Triggered when the player switches to a different level
+            hls.on(Hls.Events.LEVEL_SWITCHED, function(event, data) {
+                const level = hls.levels[data.level];
+                console.warn(`--- Switched to Level ${data.level} (${level.height}p) ---`);
+            });
+
+            // Error handling
+            hls.on(Hls.Events.ERROR, function (event, data) {
+                if (data.fatal) {
+                    console.error("Fatal error:", data.type);
+                }
+            });
+
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // For Safari native support (limited console data compared to hls.js)
+            video.src = streamSrc;
+            console.log("Native HLS detected (Safari). Detailed level logging is limited.");
+        }
+    </script>
+</body>
+</html>
