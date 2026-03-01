@@ -33,9 +33,7 @@
         var player = videojs('my-video');
 
         // Initialize the quality selector
-        player.hlsQualitySelector({
-            displayCurrentQuality: true,
-        });
+        player.hlsQualitySelector();
 
         player.ready(function() {
             console.log('Player is ready with HLS quality selection.');
