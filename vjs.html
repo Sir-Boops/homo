@@ -141,9 +141,11 @@
     fullscreenBtn.addEventListener('click', () => {
       const elem = document.documentElement;
       if (!document.fullscreenElement) {
-        elem.requestFullscreen();
+        if ( elem.requestFullscreen ) elem.requestFullscreen();
+        else if (elem.webkitEnterFullscreen) elem.webkitEnterFullscreen();
       } else {
-        document.exitFullscreen();
+        if ( document.exitFullscreen ) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       }
     });
   </script>
