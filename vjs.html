@@ -1,98 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>360 Video Player</title>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <style>
-      body { margin: 0; overflow: hidden; background: #000; }
-      #controls {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 10px;
-        background: rgba(0,0,0,0.5);
-        padding: 10px 15px;
-        border-radius: 8px;
-        color: #fff;
-        font-family: sans-serif;
-        align-items: center;
+<head>
+  <meta charset="UTF-8">
+  <title>360 Video Player - Full Controls</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    #controls {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      background: rgba(0,0,0,0.6);
+      padding: 10px 15px;
+      border-radius: 8px;
+      color: #fff;
+      font-family: sans-serif;
+      align-items: center;
+    }
+    #seek {
+      width: 250px;
+    }
+    button {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    input[type="range"] {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- A-Frame Scene -->
+  <a-scene>
+    <a-entity camera look-controls position="0 1.6 0"></a-entity>
+    <a-videosphere id="videosphere" rotation="0 -90 0" radius="500"></a-videosphere>
+  </a-scene>
+
+  <!-- Full Control Bar -->
+  <div id="controls">
+    <button id="playPause">▶️</button>
+    <input type="range" id="seek" min="0" max="100" value="0">
+    <span id="time">0:00 / 0:00</span>
+    <button id="mute">🔊</button>
+    <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
+    <button id="fullscreen">⛶</button>
+  </div>
+
+  <script>
+    const video = document.createElement('video');
+    video.crossOrigin = "anonymous";
+    video.playsInline = true;
+    video.loop = false;
+    video.muted = false;
+
+    const hls = new Hls();
+    const videoSrc = "https://public-video-cdn.boops.org/360v5/Untitled.m3u8"; // replace with your HLS URL
+
+    if (Hls.isSupported()) {
+      hls.loadSource(videoSrc);
+      hls.attachMedia(video);
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoSrc;
+    }
+
+    document.querySelector('#videosphere').setAttribute('src', video);
+
+    // Controls
+    const playPauseBtn = document.getElementById('playPause');
+    const seekSlider = document.getElementById('seek');
+    const timeDisplay = document.getElementById('time');
+    const muteBtn = document.getElementById('mute');
+    const volumeSlider = document.getElementById('volume');
+    const fullscreenBtn = document.getElementById('fullscreen');
+
+    // Play / Pause
+    playPauseBtn.addEventListener('click', () => {
+      if (video.paused) {
+        video.play();
+        playPauseBtn.textContent = '⏸️';
+      } else {
+        video.pause();
+        playPauseBtn.textContent = '▶️';
       }
-      #seek {
-        width: 300px;
+    });
+
+    // Seek
+    video.addEventListener('timeupdate', () => {
+      const percent = (video.currentTime / video.duration) * 100;
+      seekSlider.value = percent || 0;
+
+      const formatTime = t => `${Math.floor(t / 60)}:${Math.floor(t % 60).toString().padStart(2,'0')}`;
+      timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+    });
+
+    seekSlider.addEventListener('input', () => {
+      const time = (seekSlider.value / 100) * video.duration;
+      video.currentTime = time;
+    });
+
+    // Mute / Unmute
+    muteBtn.addEventListener('click', () => {
+      video.muted = !video.muted;
+      muteBtn.textContent = video.muted ? '🔇' : '🔊';
+      volumeSlider.value = video.muted ? 0 : video.volume;
+    });
+
+    // Volume
+    volumeSlider.addEventListener('input', () => {
+      video.volume = volumeSlider.value;
+      video.muted = video.volume === 0;
+      muteBtn.textContent = video.muted ? '🔇' : '🔊';
+    });
+
+    // Fullscreen
+    fullscreenBtn.addEventListener('click', () => {
+      const elem = document.documentElement;
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen();
+      } else {
+        document.exitFullscreen();
       }
-    </style>
-  </head>
-  <body>
-    <!-- A-Frame Scene -->
-    <a-scene>
-      <!-- Camera -->
-      <a-entity camera look-controls position="0 1.6 0"></a-entity>
-
-      <!-- Sphere with video texture -->
-      <a-videosphere id="videosphere" rotation="0 -90 0" radius="500"></a-videosphere>
-    </a-scene>
-
-    <!-- Controls -->
-    <div id="controls">
-      <button id="playPause">Play</button>
-      <input type="range" id="seek" min="0" max="100" value="0">
-      <span id="time">0:00</span>
-    </div>
-
-    <script>
-      const video = document.createElement('video');
-      video.crossOrigin = "anonymous";
-      video.loop = false;
-      video.muted = false; // set true if autoplaying in some browsers
-      video.playsInline = true;
-
-      const hls = new Hls();
-      const videoSrc = "https://public-video-cdn.boops.org/360v5/Untitled.m3u8"; // replace with your HLS URL
-
-      if (Hls.isSupported()) {
-        hls.loadSource(videoSrc);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          console.log('HLS manifest loaded');
-        });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = videoSrc;
-      }
-
-      const videoSphere = document.querySelector('#videosphere');
-      videoSphere.setAttribute('src', video);
-
-      // Controls
-      const playPauseBtn = document.getElementById('playPause');
-      const seekSlider = document.getElementById('seek');
-      const timeDisplay = document.getElementById('time');
-
-      playPauseBtn.addEventListener('click', () => {
-        if (video.paused) {
-          video.play();
-          playPauseBtn.textContent = 'Pause';
-        } else {
-          video.pause();
-          playPauseBtn.textContent = 'Play';
-        }
-      });
-
-      video.addEventListener('timeupdate', () => {
-        const percent = (video.currentTime / video.duration) * 100;
-        seekSlider.value = percent || 0;
-        const mins = Math.floor(video.currentTime / 60);
-        const secs = Math.floor(video.currentTime % 60).toString().padStart(2, '0');
-        timeDisplay.textContent = `${mins}:${secs}`;
-      });
-
-      seekSlider.addEventListener('input', () => {
-        const time = (seekSlider.value / 100) * video.duration;
-        video.currentTime = time;
-      });
-    </script>
-  </body>
+    });
+  </script>
+</body>
 </html>
