@@ -2,8 +2,10 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>hls.js Manual Quality Selector</title>
+  <title>HLS + 360 Toggle</title>
+
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
   <style>
     body {
@@ -11,12 +13,16 @@
       color: white;
       font-family: sans-serif;
       text-align: center;
-      padding-top: 40px;
+      margin: 0;
     }
 
     video {
       width: 800px;
       max-width: 95%;
+    }
+
+    #flatContainer {
+      padding-top: 40px;
     }
 
     .buttons {
@@ -32,69 +38,110 @@
       cursor: pointer;
     }
 
-    button:hover {
-      background: #555;
-    }
-
     button.active {
       background: #0a84ff;
+    }
+
+    #vrScene {
+      display: none;
+      height: 100vh;
     }
   </style>
 </head>
 <body>
 
-  <video id="video" controls></video>
+  <!-- Normal Video -->
+  <div id="flatContainer">
+    <video id="video" controls></video>
+    <div class="buttons" id="qualityButtons"></div>
+    <button id="toggle360">Enter 360 Mode</button>
+  </div>
 
-  <div class="buttons" id="qualityButtons"></div>
+  <!-- A-Frame Scene -->
+  <a-scene id="vrScene">
+    <a-assets>
+      <video id="vrVideo" autoplay loop crossorigin="anonymous"></video>
+    </a-assets>
+
+    <a-videosphere src="#vrVideo"></a-videosphere>
+  </a-scene>
 
   <script>
-    const video = document.getElementById('video');
-    const buttonContainer = document.getElementById('qualityButtons');
-
     const streamUrl = "https://public-video-cdn.boops.org/360v5/Untitled.m3u8";
 
+    const video = document.getElementById('video');
+    const vrVideo = document.getElementById('vrVideo');
+    const buttonsDiv = document.getElementById('qualityButtons');
+    const toggleBtn = document.getElementById('toggle360');
+    const flatContainer = document.getElementById('flatContainer');
+    const vrScene = document.getElementById('vrScene');
+
+    let hls;
+
     if (Hls.isSupported()) {
-      const hls = new Hls();
+      hls = new Hls();
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
 
+      // Attach same stream to 360 video element
+      const vrHls = new Hls();
+      vrHls.loadSource(streamUrl);
+      vrHls.attachMedia(vrVideo);
+
       hls.on(Hls.Events.MANIFEST_PARSED, function () {
 
-        // Add AUTO button
+        // AUTO button (selected by default)
         const autoBtn = document.createElement("button");
         autoBtn.innerText = "Auto";
+        autoBtn.classList.add("active");
         autoBtn.onclick = () => {
           hls.currentLevel = -1;
           setActive(autoBtn);
         };
-        buttonContainer.appendChild(autoBtn);
+        buttonsDiv.appendChild(autoBtn);
 
-        // Create button per level
+        // Create resolution buttons
         hls.levels.forEach((level, index) => {
           const btn = document.createElement("button");
-
-          const height = level.height ? level.height + "p" : level.bitrate + "bps";
-          btn.innerText = height;
+          btn.innerText = level.height + "p";
 
           btn.onclick = () => {
             hls.currentLevel = index;
             setActive(btn);
           };
 
-          buttonContainer.appendChild(btn);
+          buttonsDiv.appendChild(btn);
         });
 
         function setActive(activeBtn) {
-          document.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+          document.querySelectorAll("#qualityButtons button")
+            .forEach(b => b.classList.remove("active"));
           activeBtn.classList.add("active");
         }
 
+        // Ensure Auto is selected on load
+        hls.currentLevel = -1;
       });
-
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari native HLS
-      video.src = streamUrl;
     }
+
+    // 360 Toggle
+    let in360 = false;
+
+    toggleBtn.onclick = () => {
+      in360 = !in360;
+
+      if (in360) {
+        flatContainer.style.display = "none";
+        vrScene.style.display = "block";
+        vrVideo.play();
+        toggleBtn.innerText = "Exit 360 Mode";
+      } else {
+        flatContainer.style.display = "block";
+        vrScene.style.display = "none";
+        video.play();
+        toggleBtn.innerText = "Enter 360 Mode";
+      }
+    };
   </script>
 
 </body>
