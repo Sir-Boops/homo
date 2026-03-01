@@ -37,6 +37,7 @@
   </style>
 </head>
 <body>
+  <video id="video" crossorigin="anonymous" playsinline style="display:none"></video>
   <!-- A-Frame Scene -->
   <a-scene>
     <a-entity camera look-controls position="0 1.6 0"></a-entity>
@@ -54,11 +55,7 @@
   </div>
 
   <script>
-    const video = document.createElement('video');
-    video.crossOrigin = "anonymous";
-    video.playsInline = true;
-    video.loop = false;
-    video.muted = false;
+    const video = document.getElementById('video');
 
     const hls = new Hls();
     const videoSrc = "https://public-video-cdn.boops.org/360v5/Untitled.m3u8"; // replace with your HLS URL
@@ -70,7 +67,7 @@
       video.src = videoSrc;
     }
 
-    document.querySelector('#videosphere').setAttribute('src', video);
+    document.querySelector('#videosphere').setAttribute('src', '#video');
 
     // Controls
     const playPauseBtn = document.getElementById('playPause');
