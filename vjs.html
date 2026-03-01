@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>HLS + 360 Toggle (Fixed)</title>
+  <title>HLS + 360 Toggle (Single Video)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -54,51 +54,45 @@
 </head>
 <body>
 
-  <!-- Always visible toggle -->
   <button id="toggle360">Enter 360 Mode</button>
 
-  <!-- Normal Video -->
+  <!-- Video and quality buttons -->
   <div id="flatContainer">
-    <video id="video" controls></video>
+    <video id="video" controls autoplay></video>
     <div class="buttons" id="qualityButtons"></div>
   </div>
 
   <!-- A-Frame Scene -->
   <a-scene id="vrScene" embedded>
     <a-assets>
-      <!-- SAME VIDEO ELEMENT reused -->
-      <video id="sharedVideo" crossorigin="anonymous"></video>
+      <!-- We will move the same video element here dynamically -->
     </a-assets>
-
-    <a-videosphere src="#sharedVideo"></a-videosphere>
+    <a-videosphere id="videosphere" src="#video"></a-videosphere>
   </a-scene>
 
   <script>
-    const streamUrl = "https://public-video-cdn.boops.org/360v5/Untitled.m3u8";
+    const streamUrl = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
 
-    const flatVideo = document.getElementById('video');
-    const sharedVideo = document.getElementById('sharedVideo');
+    const video = document.getElementById('video');
     const buttonsDiv = document.getElementById('qualityButtons');
     const toggleBtn = document.getElementById('toggle360');
     const flatContainer = document.getElementById('flatContainer');
     const vrScene = document.getElementById('vrScene');
-
-    // Use ONE video element for playback
-    // We will attach HLS to sharedVideo and mirror it to flatVideo
+    const assets = vrScene.querySelector('a-assets');
+    const videosphere = document.getElementById('videosphere');
 
     let hls;
+    let in360 = false;
 
+    // Setup HLS
     if (Hls.isSupported()) {
       hls = new Hls();
       hls.loadSource(streamUrl);
-      hls.attachMedia(sharedVideo);
-
-      // Make flat video use same media stream
-      flatVideo.srcObject = sharedVideo.captureStream();
+      hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, function () {
 
-        // AUTO button (selected by default)
+        // AUTO button
         const autoBtn = document.createElement("button");
         autoBtn.innerText = "Auto";
         autoBtn.classList.add("active");
@@ -108,6 +102,7 @@
         };
         buttonsDiv.appendChild(autoBtn);
 
+        // Resolution buttons
         hls.levels.forEach((level, index) => {
           const btn = document.createElement("button");
           btn.innerText = level.height + "p";
@@ -126,25 +121,32 @@
           activeBtn.classList.add("active");
         }
 
-        hls.currentLevel = -1; // Auto on load
-        sharedVideo.play();
+        hls.currentLevel = -1; // Auto by default
+        video.play();
       });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamUrl;
     }
 
     // 360 Toggle
-    let in360 = false;
-
     toggleBtn.onclick = () => {
       in360 = !in360;
 
       if (in360) {
+        // Move video into a-scene assets
+        assets.appendChild(video);
+        videosphere.setAttribute('src', '#video');
         flatContainer.style.display = "none";
         vrScene.style.display = "block";
         toggleBtn.innerText = "Exit 360 Mode";
+        video.play();
       } else {
-        flatContainer.style.display = "block";
+        // Move video back to flat container
+        flatContainer.insertBefore(video, buttonsDiv);
         vrScene.style.display = "none";
+        flatContainer.style.display = "block";
         toggleBtn.innerText = "Enter 360 Mode";
+        video.play();
       }
     };
   </script>
