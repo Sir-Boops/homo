@@ -1,43 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video.js HLS Quality Selector</title>
-    
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; }
-        .video-container { width: 80%; max-width: 800px; margin: 50px auto; }
-        /* Style the quality menu to be more visible */
-        .vjs-quality-selector .vjs-menu-button { color: #fff; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Video.js HLS Quality Selector</title>
+
+  <!-- Video.js CSS -->
+  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .video-js {
+      width: 900px;
+      height: 500px;
+    }
+  </style>
 </head>
 <body>
 
-    <h2>Adaptive HLS Stream</h2>
+  <video
+    id="my-video"
+    class="video-js vjs-default-skin"
+    controls
+    preload="auto"
+    data-setup="{}"
+  >
+    <source src="YOUR_STREAM_URL.m3u8" type="application/x-mpegURL">
+  </video>
 
-    <div class="video-container">
-        <video id="my-video" class="video-js vjs-default-skin vjs-16-9 vjs-big-play-centered" controls preload="auto">
-            <source src="https://public-video-cdn.boops.org/360v5/Untitled.m3u8" type="application/x-mpegURL">
-        </video>
-    </div>
+  <!-- Video.js -->
+  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-    
-    <script src="https://unpkg.com/videojs-contrib-quality-levels@4.1.0/dist/videojs-contrib-quality-levels.min.js"></script>
-    
-    <script src="https://unpkg.com/videojs-hls-quality-selector@1.1.4/dist/videojs-hls-quality-selector.min.js"></script>
+  <!-- Quality selector plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/videojs-hls-quality-selector@1.1.4/dist/videojs-hls-quality-selector.min.js"></script>
 
-    <script>
-        var player = videojs('my-video');
+  <script>
+    var player = videojs('my-video');
 
-        // Initialize the quality selector
-        player.hlsQualitySelector();
+    player.ready(function () {
+      player.hlsQualitySelector({
+        displayCurrentQuality: true
+      });
+    });
+  </script>
 
-        player.ready(function() {
-            console.log('Player is ready with HLS quality selection.');
-        });
-    </script>
 </body>
 </html>
