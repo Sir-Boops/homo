@@ -2,54 +2,20 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>HLS + 360 Toggle (Single Video)</title>
+  <title>HLS + 360 Toggle (Single Video, Fixed)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
   <style>
-    body {
-      background: #111;
-      color: white;
-      font-family: sans-serif;
-      text-align: center;
-      margin: 0;
-    }
-
-    #flatContainer {
-      padding-top: 30px;
-    }
-
-    video {
-      width: 800px;
-      max-width: 95%;
-    }
-
-    .buttons {
-      margin-top: 15px;
-    }
-
-    button {
-      padding: 8px 14px;
-      margin: 5px;
-      background: #333;
-      color: white;
-      border: 1px solid #555;
-      cursor: pointer;
-    }
-
-    button.active {
-      background: #0a84ff;
-    }
-
-    #vrScene {
-      display: none;
-      height: 100vh;
-    }
-
-    #toggle360 {
-      margin-top: 15px;
-    }
+    body { background: #111; color: white; font-family: sans-serif; text-align: center; margin:0; }
+    #flatContainer { padding-top: 30px; }
+    video { width: 800px; max-width: 95%; }
+    .buttons { margin-top: 15px; }
+    button { padding: 8px 14px; margin:5px; background:#333; color:white; border:1px solid #555; cursor:pointer; }
+    button.active { background: #0a84ff; }
+    #vrScene { display: none; height: 100vh; }
+    #toggle360 { margin-top:15px; }
   </style>
 </head>
 <body>
@@ -58,16 +24,14 @@
 
   <!-- Video and quality buttons -->
   <div id="flatContainer">
-    <video id="video" controls autoplay></video>
+    <video id="video" controls autoplay crossorigin="anonymous"></video>
     <div class="buttons" id="qualityButtons"></div>
   </div>
 
   <!-- A-Frame Scene -->
   <a-scene id="vrScene" embedded>
-    <a-assets>
-      <!-- We will move the same video element here dynamically -->
-    </a-assets>
-    <a-videosphere id="videosphere" src="#video"></a-videosphere>
+    <a-assets></a-assets>
+    <a-videosphere id="videosphere"></a-videosphere>
   </a-scene>
 
   <script>
@@ -96,28 +60,19 @@
         const autoBtn = document.createElement("button");
         autoBtn.innerText = "Auto";
         autoBtn.classList.add("active");
-        autoBtn.onclick = () => {
-          hls.currentLevel = -1;
-          setActive(autoBtn);
-        };
+        autoBtn.onclick = () => { hls.currentLevel = -1; setActive(autoBtn); };
         buttonsDiv.appendChild(autoBtn);
 
         // Resolution buttons
         hls.levels.forEach((level, index) => {
           const btn = document.createElement("button");
           btn.innerText = level.height + "p";
-
-          btn.onclick = () => {
-            hls.currentLevel = index;
-            setActive(btn);
-          };
-
+          btn.onclick = () => { hls.currentLevel = index; setActive(btn); };
           buttonsDiv.appendChild(btn);
         });
 
         function setActive(activeBtn) {
-          document.querySelectorAll("#qualityButtons button")
-            .forEach(b => b.classList.remove("active"));
+          document.querySelectorAll("#qualityButtons button").forEach(b => b.classList.remove("active"));
           activeBtn.classList.add("active");
         }
 
@@ -129,27 +84,29 @@
     }
 
     // 360 Toggle
-    toggleBtn.onclick = () => {
+    toggleBtn.onclick = async () => {
       in360 = !in360;
 
       if (in360) {
-        // Move video into a-scene assets
+        // Move video into a-frame assets
         assets.appendChild(video);
         videosphere.setAttribute('src', '#video');
         flatContainer.style.display = "none";
         vrScene.style.display = "block";
         toggleBtn.innerText = "Exit 360 Mode";
-        video.play();
+
+        // Wait for video to be ready
+        await video.play();
       } else {
         // Move video back to flat container
         flatContainer.insertBefore(video, buttonsDiv);
         vrScene.style.display = "none";
         flatContainer.style.display = "block";
         toggleBtn.innerText = "Enter 360 Mode";
+
         video.play();
       }
     };
   </script>
-
 </body>
 </html>
