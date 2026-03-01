@@ -1,52 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Video.js HLS Quality Selector</title>
-
-  <!-- Video.js CSS -->
-  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  <title>hls.js Manual Quality Selector</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
   <style>
     body {
       background: #111;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 40px;
     }
-    .video-js {
-      width: 900px;
-      height: 500px;
+
+    video {
+      width: 800px;
+      max-width: 95%;
+    }
+
+    .buttons {
+      margin-top: 15px;
+    }
+
+    button {
+      padding: 8px 14px;
+      margin: 5px;
+      background: #333;
+      color: white;
+      border: 1px solid #555;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #555;
+    }
+
+    button.active {
+      background: #0a84ff;
     }
   </style>
 </head>
 <body>
 
-  <video
-    id="my-video"
-    class="video-js vjs-default-skin"
-    controls
-    preload="auto"
-    data-setup="{}"
-  >
-    <source src="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" type="application/x-mpegURL">
-  </video>
+  <video id="video" controls></video>
 
-  <!-- Video.js -->
-  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-
-  <!-- Quality selector plugin -->
-  <script src="https://cdn.jsdelivr.net/npm/videojs-hls-quality-selector@1.1.4/dist/videojs-hls-quality-selector.min.js"></script>
+  <div class="buttons" id="qualityButtons"></div>
 
   <script>
-    var player = videojs('my-video');
+    const video = document.getElementById('video');
+    const buttonContainer = document.getElementById('qualityButtons');
 
-    player.ready(function () {
-      player.hlsQualitySelector({
-        displayCurrentQuality: true
+    const streamUrl = "https://public-video-cdn.boops.org/360v5/Untitled.m3u8";
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, function () {
+
+        // Add AUTO button
+        const autoBtn = document.createElement("button");
+        autoBtn.innerText = "Auto";
+        autoBtn.onclick = () => {
+          hls.currentLevel = -1;
+          setActive(autoBtn);
+        };
+        buttonContainer.appendChild(autoBtn);
+
+        // Create button per level
+        hls.levels.forEach((level, index) => {
+          const btn = document.createElement("button");
+
+          const height = level.height ? level.height + "p" : level.bitrate + "bps";
+          btn.innerText = height;
+
+          btn.onclick = () => {
+            hls.currentLevel = index;
+            setActive(btn);
+          };
+
+          buttonContainer.appendChild(btn);
+        });
+
+        function setActive(activeBtn) {
+          document.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+          activeBtn.classList.add("active");
+        }
+
       });
-    });
+
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari native HLS
+      video.src = streamUrl;
+    }
   </script>
 
 </body>
