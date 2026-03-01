@@ -1,112 +1,98 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>HLS + 360 Toggle (Single Video, Fixed)</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-
-  <style>
-    body { background: #111; color: white; font-family: sans-serif; text-align: center; margin:0; }
-    #flatContainer { padding-top: 30px; }
-    video { width: 800px; max-width: 95%; }
-    .buttons { margin-top: 15px; }
-    button { padding: 8px 14px; margin:5px; background:#333; color:white; border:1px solid #555; cursor:pointer; }
-    button.active { background: #0a84ff; }
-    #vrScene { display: none; height: 100vh; }
-    #toggle360 { margin-top:15px; }
-  </style>
-</head>
-<body>
-
-  <button id="toggle360">Enter 360 Mode</button>
-
-  <!-- Video and quality buttons -->
-  <div id="flatContainer">
-    <video id="video" controls autoplay crossorigin="anonymous"></video>
-    <div class="buttons" id="qualityButtons"></div>
-  </div>
-
-  <!-- A-Frame Scene -->
-  <a-scene id="vrScene" embedded>
-    <a-assets></a-assets>
-    <a-videosphere id="videosphere"></a-videosphere>
-  </a-scene>
-
-  <script>
-    const streamUrl = "https://public-video-cdn.boops.org/360v5/Untitled.m3u8";
-
-    const video = document.getElementById('video');
-    const buttonsDiv = document.getElementById('qualityButtons');
-    const toggleBtn = document.getElementById('toggle360');
-    const flatContainer = document.getElementById('flatContainer');
-    const vrScene = document.getElementById('vrScene');
-    const assets = vrScene.querySelector('a-assets');
-    const videosphere = document.getElementById('videosphere');
-
-    let hls;
-    let in360 = false;
-
-    // Setup HLS
-    if (Hls.isSupported()) {
-      hls = new Hls();
-      hls.loadSource(streamUrl);
-      hls.attachMedia(video);
-
-      hls.on(Hls.Events.MANIFEST_PARSED, function () {
-
-        // AUTO button
-        const autoBtn = document.createElement("button");
-        autoBtn.innerText = "Auto";
-        autoBtn.classList.add("active");
-        autoBtn.onclick = () => { hls.currentLevel = -1; setActive(autoBtn); };
-        buttonsDiv.appendChild(autoBtn);
-
-        // Resolution buttons
-        hls.levels.forEach((level, index) => {
-          const btn = document.createElement("button");
-          btn.innerText = level.height + "p";
-          btn.onclick = () => { hls.currentLevel = index; setActive(btn); };
-          buttonsDiv.appendChild(btn);
-        });
-
-        function setActive(activeBtn) {
-          document.querySelectorAll("#qualityButtons button").forEach(b => b.classList.remove("active"));
-          activeBtn.classList.add("active");
-        }
-
-        hls.currentLevel = -1; // Auto by default
-        video.play();
-      });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = streamUrl;
-    }
-
-    // 360 Toggle
-    toggleBtn.onclick = async () => {
-      in360 = !in360;
-
-      if (in360) {
-        // Move video into a-frame assets
-        assets.appendChild(video);
-        videosphere.setAttribute('src', '#video');
-        flatContainer.style.display = "none";
-        vrScene.style.display = "block";
-        toggleBtn.innerText = "Exit 360 Mode";
-
-        // Wait for video to be ready
-        await video.play();
-      } else {
-        // Move video back to flat container
-        flatContainer.insertBefore(video, buttonsDiv);
-        vrScene.style.display = "none";
-        flatContainer.style.display = "block";
-        toggleBtn.innerText = "Enter 360 Mode";
-
-        video.play();
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>360 Video Player</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+      body { margin: 0; overflow: hidden; background: #000; }
+      #controls {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        background: rgba(0,0,0,0.5);
+        padding: 10px 15px;
+        border-radius: 8px;
+        color: #fff;
+        font-family: sans-serif;
+        align-items: center;
       }
-    };
-  </script>
-</body>
+      #seek {
+        width: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- A-Frame Scene -->
+    <a-scene>
+      <!-- Camera -->
+      <a-entity camera look-controls position="0 1.6 0"></a-entity>
+
+      <!-- Sphere with video texture -->
+      <a-videosphere id="videosphere" rotation="0 -90 0" radius="500"></a-videosphere>
+    </a-scene>
+
+    <!-- Controls -->
+    <div id="controls">
+      <button id="playPause">Play</button>
+      <input type="range" id="seek" min="0" max="100" value="0">
+      <span id="time">0:00</span>
+    </div>
+
+    <script>
+      const video = document.createElement('video');
+      video.crossOrigin = "anonymous";
+      video.loop = false;
+      video.muted = false; // set true if autoplaying in some browsers
+      video.playsInline = true;
+
+      const hls = new Hls();
+      const videoSrc = "https://public-video-cdn.boops.org/360v5/Untitled.m3u8"; // replace with your HLS URL
+
+      if (Hls.isSupported()) {
+        hls.loadSource(videoSrc);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log('HLS manifest loaded');
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoSrc;
+      }
+
+      const videoSphere = document.querySelector('#videosphere');
+      videoSphere.setAttribute('src', video);
+
+      // Controls
+      const playPauseBtn = document.getElementById('playPause');
+      const seekSlider = document.getElementById('seek');
+      const timeDisplay = document.getElementById('time');
+
+      playPauseBtn.addEventListener('click', () => {
+        if (video.paused) {
+          video.play();
+          playPauseBtn.textContent = 'Pause';
+        } else {
+          video.pause();
+          playPauseBtn.textContent = 'Play';
+        }
+      });
+
+      video.addEventListener('timeupdate', () => {
+        const percent = (video.currentTime / video.duration) * 100;
+        seekSlider.value = percent || 0;
+        const mins = Math.floor(video.currentTime / 60);
+        const secs = Math.floor(video.currentTime % 60).toString().padStart(2, '0');
+        timeDisplay.textContent = `${mins}:${secs}`;
+      });
+
+      seekSlider.addEventListener('input', () => {
+        const time = (seekSlider.value / 100) * video.duration;
+        video.currentTime = time;
+      });
+    </script>
+  </body>
 </html>
