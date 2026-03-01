@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>HLS + 360 Toggle</title>
+  <title>HLS + 360 Toggle (Fixed)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -16,13 +16,13 @@
       margin: 0;
     }
 
+    #flatContainer {
+      padding-top: 30px;
+    }
+
     video {
       width: 800px;
       max-width: 95%;
-    }
-
-    #flatContainer {
-      padding-top: 40px;
     }
 
     .buttons {
@@ -46,47 +46,55 @@
       display: none;
       height: 100vh;
     }
+
+    #toggle360 {
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Always visible toggle -->
+  <button id="toggle360">Enter 360 Mode</button>
 
   <!-- Normal Video -->
   <div id="flatContainer">
     <video id="video" controls></video>
     <div class="buttons" id="qualityButtons"></div>
-    <button id="toggle360">Enter 360 Mode</button>
   </div>
 
   <!-- A-Frame Scene -->
-  <a-scene id="vrScene">
+  <a-scene id="vrScene" embedded>
     <a-assets>
-      <video id="vrVideo" autoplay loop crossorigin="anonymous"></video>
+      <!-- SAME VIDEO ELEMENT reused -->
+      <video id="sharedVideo" crossorigin="anonymous"></video>
     </a-assets>
 
-    <a-videosphere src="#vrVideo"></a-videosphere>
+    <a-videosphere src="#sharedVideo"></a-videosphere>
   </a-scene>
 
   <script>
     const streamUrl = "https://public-video-cdn.boops.org/360v5/Untitled.m3u8";
 
-    const video = document.getElementById('video');
-    const vrVideo = document.getElementById('vrVideo');
+    const flatVideo = document.getElementById('video');
+    const sharedVideo = document.getElementById('sharedVideo');
     const buttonsDiv = document.getElementById('qualityButtons');
     const toggleBtn = document.getElementById('toggle360');
     const flatContainer = document.getElementById('flatContainer');
     const vrScene = document.getElementById('vrScene');
+
+    // Use ONE video element for playback
+    // We will attach HLS to sharedVideo and mirror it to flatVideo
 
     let hls;
 
     if (Hls.isSupported()) {
       hls = new Hls();
       hls.loadSource(streamUrl);
-      hls.attachMedia(video);
+      hls.attachMedia(sharedVideo);
 
-      // Attach same stream to 360 video element
-      const vrHls = new Hls();
-      vrHls.loadSource(streamUrl);
-      vrHls.attachMedia(vrVideo);
+      // Make flat video use same media stream
+      flatVideo.srcObject = sharedVideo.captureStream();
 
       hls.on(Hls.Events.MANIFEST_PARSED, function () {
 
@@ -100,7 +108,6 @@
         };
         buttonsDiv.appendChild(autoBtn);
 
-        // Create resolution buttons
         hls.levels.forEach((level, index) => {
           const btn = document.createElement("button");
           btn.innerText = level.height + "p";
@@ -119,8 +126,8 @@
           activeBtn.classList.add("active");
         }
 
-        // Ensure Auto is selected on load
-        hls.currentLevel = -1;
+        hls.currentLevel = -1; // Auto on load
+        sharedVideo.play();
       });
     }
 
@@ -133,12 +140,10 @@
       if (in360) {
         flatContainer.style.display = "none";
         vrScene.style.display = "block";
-        vrVideo.play();
         toggleBtn.innerText = "Exit 360 Mode";
       } else {
         flatContainer.style.display = "block";
         vrScene.style.display = "none";
-        video.play();
         toggleBtn.innerText = "Enter 360 Mode";
       }
     };
