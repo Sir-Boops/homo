@@ -57,8 +57,11 @@
   <script>
     const video = document.getElementById('video');
 
+    const queryString = window.location.search;
+    const params = new URLSearchParams(queryString);
+    
     const hls = new Hls();
-    const videoSrc = "https://public-video-cdn.boops.org/360v5/Untitled.m3u8"; // replace with your HLS URL
+    const videoSrc = params.get('url'); // replace with your HLS URL
 
     if (Hls.isSupported()) {
       hls.loadSource(videoSrc);
